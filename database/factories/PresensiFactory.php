@@ -21,7 +21,7 @@ class PresensiFactory extends Factory
             'tanggal' => fake()->date(),
             'jam_masuk' => '07:00:00',
             'jam_pulang' => '15:00:00',
-            'status' => fake()->randomElement(['hadir', 'izin', 'sakit', 'alpa']),
+            'status' => fake()->randomElement(['hadir', 'izin', 'sakit', 'cuti', 'dinas_luar', 'alpa']),
             'kode_qr' => fake()->uuid(),
         ];
     }

@@ -18,13 +18,15 @@ class PersetujuanController extends Controller
 
     public function setujui(Pengajuan $pengajuan, PresensiService $presensiService)
     {
-        $pengajuan->update([
-            'status' => 'disetujui',
-            'disetujui_oleh' => auth()->id(),
-            'diproses_pada' => now(),
-        ]);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($pengajuan, $presensiService) {
+            $pengajuan->update([
+                'status' => 'disetujui',
+                'disetujui_oleh' => auth()->id(),
+                'diproses_pada' => now(),
+            ]);
 
-        $presensiService->sinkronkanPengajuanDisetujui($pengajuan);
+            $presensiService->sinkronkanPengajuanDisetujui($pengajuan);
+        });
 
         return back()->with('success', 'Pengajuan disetujui.');
     }

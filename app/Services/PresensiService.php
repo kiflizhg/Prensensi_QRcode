@@ -104,14 +104,26 @@ class PresensiService
 
     public function sinkronkanPengajuanDisetujui(Pengajuan $pengajuan): void
     {
+        $presensiData = [];
+        $now = now()->toDateTimeString();
+
         foreach (CarbonPeriod::create($pengajuan->tanggal_mulai, $pengajuan->tanggal_selesai) as $tanggal) {
-            Presensi::updateOrCreate(
-                ['guru_id' => $pengajuan->guru_id, 'tanggal' => $tanggal->toDateString()],
-                [
-                    'status' => $pengajuan->jenis,
-                    'metode_input' => 'Form Web',
-                    'keterangan' => $pengajuan->alasan,
-                ]
+            $presensiData[] = [
+                'guru_id' => $pengajuan->guru_id,
+                'tanggal' => $tanggal->toDateString(),
+                'status' => $pengajuan->jenis,
+                'metode_input' => 'Form Web',
+                'keterangan' => $pengajuan->alasan,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        foreach (array_chunk($presensiData, 100) as $chunk) {
+            Presensi::upsert(
+                $chunk,
+                ['guru_id', 'tanggal'],
+                ['status', 'metode_input', 'keterangan', 'updated_at']
             );
         }
     }

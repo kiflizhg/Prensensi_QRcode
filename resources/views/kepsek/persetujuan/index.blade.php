@@ -25,8 +25,12 @@
                 </td>
                 <td>{{ $pengajuan->status }}</td>
                 <td>
-                    <form method="post" action="{{ route('kepsek.persetujuan.setujui', $pengajuan) }}" style="display:inline">@csrf<button class="btn" type="submit">@include('components.icon', ['name' => 'check']) Setujui</button></form>
-                    <form method="post" action="{{ route('kepsek.persetujuan.tolak', $pengajuan) }}" style="display:inline">@csrf<button class="btn danger" type="submit">Tolak</button></form>
+                    @if ($pengajuan->status === 'menunggu')
+                        <form method="post" action="{{ route('kepsek.persetujuan.setujui', $pengajuan) }}" style="display:inline">@csrf<button class="btn" type="submit">@include('components.icon', ['name' => 'check']) Setujui</button></form>
+                        <form method="post" action="{{ route('kepsek.persetujuan.tolak', $pengajuan) }}" style="display:inline">@csrf<button class="btn danger" type="submit">Tolak</button></form>
+                    @else
+                        <span class="badge {{ $pengajuan->status === 'disetujui' ? 'success' : 'danger' }}">{{ ucfirst($pengajuan->status) }}</span>
+                    @endif
                 </td>
             </tr>
         @empty
