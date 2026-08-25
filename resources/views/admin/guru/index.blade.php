@@ -22,13 +22,15 @@
                 <td>{{ $guru->alamat ?? '-' }}</td>
                 <td>{{ $guru->status }}</td>
                 <td>
-                    <a class="btn ghost" href="{{ route('admin.guru.show', $guru) }}">Detail</a>
-                    <a class="btn secondary" href="{{ route('admin.guru.kartu.show', $guru) }}">@include('components.icon', ['name' => 'card']) QR</a>
-                    <a class="btn secondary" href="{{ route('admin.guru.edit', $guru) }}">@include('components.icon', ['name' => 'edit']) Edit</a>
-                    <form method="post" action="{{ route('admin.guru.destroy', $guru) }}" style="display:inline">
-                        @csrf @method('DELETE')
-                        <button class="btn danger" type="submit">@include('components.icon', ['name' => 'trash']) Hapus</button>
-                    </form>
+                    <div class="table-actions">
+                        <a class="btn ghost" href="{{ route('admin.guru.show', $guru) }}">Detail</a>
+                        <a class="btn secondary" href="{{ route('admin.guru.kartu.show', $guru) }}">@include('components.icon', ['name' => 'card']) QR</a>
+                        <a class="btn secondary" href="{{ route('admin.guru.edit', $guru) }}">@include('components.icon', ['name' => 'edit']) Edit</a>
+                        <form method="post" action="{{ route('admin.guru.destroy', $guru) }}">
+                            @csrf @method('DELETE')
+                            <button class="btn danger" type="submit">@include('components.icon', ['name' => 'trash']) Hapus</button>
+                        </form>
+                    </div>
                 </td>
             </tr>
         @empty
