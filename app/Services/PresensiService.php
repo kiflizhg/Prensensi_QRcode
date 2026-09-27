@@ -5,22 +5,21 @@ namespace App\Services;
 use App\Models\Guru;
 use App\Models\Pengajuan;
 use App\Models\Presensi;
-use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Validation\ValidationException;
 
 class PresensiService
 {
-    private const BATAS_MASUK_NORMAL = '07:30:00';
-    private const MULAI_SCAN_PULANG = '12:00:00';
-
     public function absenMasuk(Guru $guru, ?string $kodeQr = null, string $metodeInput = 'Scan Alat'): Presensi
     {
         $waktuScan = now();
-        $presensi = Presensi::firstOrNew([
-            'guru_id' => $guru->id,
-            'tanggal' => $waktuScan->toDateString(),
-        ]);
+        $jadwal = app(JadwalGuruService::class)->untukPresensi($guru, $waktuScan);
+        $presensi = Presensi::where('guru_id', $guru->id)
+            ->whereDate('tanggal', $waktuScan->toDateString())
+            ->first() ?? new Presensi([
+                'guru_id' => $guru->id,
+                'tanggal' => $waktuScan->toDateString(),
+            ]);
 
         if (! $presensi->jam_masuk) {
             $presensi->jam_masuk = $waktuScan->format('H:i:s');
@@ -29,8 +28,8 @@ class PresensiService
         $presensi->status = 'hadir';
         $presensi->metode_input = $metodeInput;
 
-        if ($this->isTerlambatMasuk($waktuScan)) {
-            $presensi->keterangan = 'Terlambat scan masuk pukul '.$waktuScan->format('H:i').'.';
+        if ($presensi->jam_masuk > $jadwal['jam_masuk'].':00') {
+            $presensi->keterangan = 'Terlambat scan masuk pukul '.substr($presensi->jam_masuk, 0, 5).'.';
         }
 
         if ($kodeQr) {
@@ -45,6 +44,10 @@ class PresensiService
     public function absenPulang(Guru $guru, ?string $kodeQr = null, string $metodeInput = 'Scan Alat'): Presensi
     {
         $waktuScan = now();
+        $jadwal = app(JadwalGuruService::class)->untukPresensi($guru, $waktuScan);
+        if ($waktuScan->format('H:i:s') < $jadwal['jam_pulang'].':00') {
+            throw ValidationException::withMessages(['qr_code' => 'Presensi pulang tersedia mulai pukul '.$jadwal['jam_pulang'].'.']);
+        }
         $presensi = Presensi::where('guru_id', $guru->id)
             ->whereDate('tanggal', $waktuScan->toDateString())
             ->first();
@@ -131,25 +134,16 @@ class PresensiService
     private function tentukanJenisScanOtomatis(Guru $guru): string
     {
         $waktuScan = now();
+        $jadwal = app(JadwalGuruService::class)->untukPresensi($guru, $waktuScan);
         $presensi = Presensi::where('guru_id', $guru->id)
             ->whereDate('tanggal', $waktuScan->toDateString())
             ->first();
 
-        if ($presensi?->jam_masuk && ! $presensi->jam_pulang && $this->isWaktuPulang($waktuScan)) {
+        if ($presensi?->jam_masuk && ! $presensi->jam_pulang && $waktuScan->format('H:i:s') >= $jadwal['jam_pulang'].':00') {
             return 'pulang';
         }
 
         return 'masuk';
-    }
-
-    private function isTerlambatMasuk(Carbon $waktuScan): bool
-    {
-        return $waktuScan->format('H:i:s') > self::BATAS_MASUK_NORMAL;
-    }
-
-    private function isWaktuPulang(Carbon $waktuScan): bool
-    {
-        return $waktuScan->format('H:i:s') >= self::MULAI_SCAN_PULANG;
     }
 
     private function pengajuanDisetujuiHariIni(Guru $guru): ?Pengajuan

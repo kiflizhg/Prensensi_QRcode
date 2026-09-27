@@ -1,192 +1,176 @@
-# Dokumentasi Sistem Presensi QR Code
+# Dokumentasi Sistem
 
-## 1. Ringkasan Sistem
-Sistem Presensi QR Code adalah aplikasi berbasis web yang bertujuan untuk mengelola kehadiran guru secara digital menggunakan teknologi pemindaian QR Code. Permasalahan utama yang diselesaikan adalah pencatatan kehadiran yang lebih akurat, cepat, serta meminimalisir manipulasi absen. Pengguna sistem ini meliputi Administrator, Guru, dan Kepala Sekolah. Data utama yang dikelola meliputi data pengguna, data guru, kartu/token QR, data kehadiran (presensi), serta pengajuan izin/sakit/cuti. Keluaran utama sistem adalah rekapitulasi kehadiran harian, monitoring kehadiran real-time, dan riwayat presensi guru.
+## Profil guru dan kewenangan kata sandi
 
-## 2. Teknologi yang Digunakan
-Berdasarkan analisis file konfigurasi (`composer.json`, `package.json`, `.env.example`, dll), teknologi yang digunakan adalah:
-- **Backend Framework**: Laravel v12.0
-- **PHP Requirement**: PHP >= 8.2
-- **Database**: SQLite (dilihat dari skrip `post-create-project-cmd` pada composer yang membuat `database.sqlite`)
-- **Frontend / Styling**: Tailwind CSS v4, dikompilasi menggunakan Vite
-- **Autentikasi**: Laravel Auth bawaan dengan pembatasan single-session khusus Admin dan Kepala Sekolah.
-- **QR Code Library (Backend)**: `simplesoftwareio/simple-qrcode` v4.2 (digunakan untuk mencetak SVG QR Code).
-- **QR Code Library (Frontend)**: `html5-qrcode` v2.3.8 (digunakan untuk fitur pemindaian di web).
-- **PDF Library**: `barryvdh/laravel-dompdf` v3.1 (tersedia di composer, kemungkinan untuk cetak laporan).
-- **Testing**: PHPUnit v11.5.
+Guru dapat memperbarui nama, nama pengguna, alamat surel, foto, nomor HP, dan alamat melalui Profil Saya. Nama akun (`users.name`) dan nama guru (`gurus.nama`) diperbarui dalam transaksi yang sama. Data Guru di admin membaca langsung akun dan data guru tersebut, termasuk foto dan surel. Perubahan terlihat ketika halaman admin dibuka atau dimuat ulang, tanpa input ulang oleh admin. Pembaruan data guru oleh admin mempertahankan surel yang telah dipilih guru.
 
-## 3. Pengguna dan Hak Akses
+Guru tidak memiliki formulir atau rute ubah kata sandi. Permintaan kata sandi yang disisipkan ke pembaruan profil ditolak. Admin tetap mengelola kata sandi guru melalui Ubah Data Guru. NIP, status, mata pelajaran, jadwal, QR, dan peran akun tidak dapat diubah melalui profil guru.
 
-| Role | Dashboard | Menu/Fitur Utama | Hak Akses | Pembatasan | Bukti File |
-|------|-----------|------------------|-----------|-------------|------------|
-| Admin | `/admin/dashboard` | Kelola Guru, Presensi, Notifikasi, Laporan | Read, Create, Update, Delete data guru; Akses halaman scan terminal | Tidak memiliki wewenang untuk menyetujui pengajuan izin | `routes/web.php` (admin), `App\Http\Controllers\Admin\*` |
-| Guru | `/guru/dashboard` | Riwayat Presensi, Pengajuan Izin/Sakit | Read data sendiri, Create pengajuan izin | Hanya bisa melihat data milik sendiri, tidak bisa menambah guru | `routes/web.php` (guru), `App\Http\Controllers\Guru\*` |
-| Kepala Sekolah | `/kepsek/dashboard` | Monitoring Presensi, Persetujuan Pengajuan | Read rekap, Approve/Reject pengajuan izin guru | Tidak bisa menambah/mengubah master data guru | `routes/web.php` (kepsek), `App\Http\Controllers\KepalaSekolah\*` |
+## Desain layanan guru untuk HP dan PC
 
-**Mekanisme Otorisasi (Middleware):**
-Aplikasi menggunakan middleware bawaan Laravel (`auth`) yang digabungkan dengan middleware spesifik role (`admin`, `guru`, `kepsek`) di setiap route file.
+Guru menggunakan struktur header, navigasi, dan area konten bersama dengan admin, tetapi memiliki tampilan tersendiri melalui `public/assets/css/guru.css` dan kelas `guru-body`. Warna biru kehijauan lembut, kartu dengan sudut membulat, ukuran teks, dan tombol sentuh membedakannya dari administrasi. Stylesheet ini hanya dimuat untuk guru.
 
-## 4. Gambaran Alur Sistem
-1. Admin mendaftarkan data guru baru.
-2. Sistem otomatis membuatkan akun login dan menghasilkan Token QR unik.
-3. Guru mengunduh Kartu QR mereka dari sistem.
-4. Guru melakukan pemindaian QR Code di perangkat scanner yang disediakan (halaman `/scan`).
-5. Sistem memvalidasi QR, mendeteksi jenis scan (masuk/pulang), dan mencatat waktu presensi ke dalam database.
-6. Admin dan Kepala Sekolah dapat memantau data kehadiran secara langsung di dashboard/monitoring.
-7. Jika Guru berhalangan hadir, mereka dapat membuat Pengajuan (Izin/Sakit/Cuti).
-8. Kepala Sekolah menyetujui pengajuan tersebut, dan sistem akan otomatis mengisi status kehadiran Guru pada tanggal yang diajukan.
+Pada layar hingga 980 px tersedia navigasi bawah: Beranda, Jadwal, Presensi, Pengajuan, dan Profil. Menu lengkap di atas tetap memberi akses ke riwayat dan arahan. Navigasi bawah memakai ruang tersendiri serta dukungan safe-area agar tidak menutupi konten. Tombol utama memiliki tinggi minimal 48 px, kolom formulir berukuran teks 16 px, dan pembesaran browser tidak dinonaktifkan.
 
-## 5. Alur Autentikasi
-Alur berdasarkan `App\Http\Controllers\Auth\LoginController.php`:
-- **Login Page**: Pengguna membuka halaman `/login`.
-- **Validasi Input**: Memasukkan *login* (bisa berupa email atau username) dan *password*.
-- **Authentication**: `Auth::validate()` mengecek kredensial. Terdapat pengecekan khusus apakah `is_active = true`.
-- **Single-Session (Khusus Admin/Kepsek)**: Jika pengguna adalah Admin atau Kepsek, sistem akan mengecek field `active_session_id`. Jika sesi lain sedang aktif, login ditolak dengan pesan error.
-- **Sukses Login**: Jika berhasil, sesi diregenerasi, `active_session_id` disimpan (untuk admin/kepsek), dan pengguna diarahkan ke rute `/dashboard`. Rute ini (`routes/web.php`) akan melakukan deteksi role dan *redirect* ke dashboard masing-masing (`/admin/dashboard`, `/guru/dashboard`, atau `/kepsek/dashboard`).
-- **Logout**: Memutus sesi dan mengosongkan `active_session_id` pada tabel *users*.
+Jadwal ditampilkan sebagai kartu per hari: dua kolom pada PC dan satu kolom pada HP, dengan penanda hari ini dan jam WIB. Riwayat presensi dan pengajuan memakai tabel pada PC serta kartu berlabel pada HP. Beranda menjelaskan bahwa presensi dilakukan dengan kartu QR di terminal sekolah; menu Presensi hanya menampilkan hasil pencatatan. Pengajuan menyediakan label kolom yang jelas dan mempertahankan isian ketika validasi gagal.
 
-## 6. Pengelolaan Guru
-Fungsionalitas ini berada di `App\Http\Controllers\Admin\GuruController.php` dan `App\Services\QRCodeService.php`.
-- **Tambah Guru**: Admin mengisi formulir (NIP, nama, dll). Sistem akan menyimpan data ke tabel `gurus` dan secara otomatis membuatkan akun pada tabel `users`.
-- **Kredensial Default**: Akun `users` dibuat menggunakan field `username` (input form), `email` (hasil generate format `username@sma-cipasung.local`), dan `password` default (menggunakan NIP guru).
-- **Pembuatan QR**: Setelah data guru tersimpan, `QRCodeService->ensureGuruToken()` berjalan. Ia membuat token string acak sepanjang 48 karakter dengan prefix `GURU-` dan menyimpannya di kolom `token_qr` pada tabel `gurus`.
-- **Ubah/Hapus Guru**: Pengubahan data guru akan mengubah data profil dan user terkait. Penghapusan akan menghapus data di `gurus` dan `users` secara berjenjang (melalui *database transaction*).
-- **Cetak Kartu QR**: `Admin\GuruCardController.php` menangani pencetakan kartu. Menggunakan `html-download` berformat HTML dengan SVG QR code (tidak menggunakan PDF library).
+Pengujian portal guru lulus (3 pengujian, 85 assertions), build Vite dan kompilasi Blade berhasil. Tampilan dirancang responsif untuk Android, iPhone, dan PC, tetapi belum diuji visual pada perangkat fisik atau browser dalam sesi ini.
 
-## 7. QR Code dan QR Card
-- **Siapa yang menghasilkan QR**: Sistem di sisi backend (`QRCodeService`).
-- **Library**: `simplesoftwareio/simple-qrcode`.
-- **Payload QR**: Merupakan *raw token* (misal: `GURU-ABC123XYZ...`). Token ini unik untuk tiap guru dan disimpan di database `gurus`.
-- **Pembuatan QR Card**: Dibuat dalam format file `.html` (fitur unduh di `GuruCardController`), bukan `.pdf`.
+## Portal guru terhubung dengan administrasi sekolah
 
-## 8. Pemindaian dan Pencatatan Presensi
-- **Halaman Pemindaian**: Berada pada rute `/scan` (publik, `ScanController@index`). Kemungkinan juga menggunakan `html5-qrcode` untuk integrasi kamera.
-- **Request ke Backend**: Memukul rute `POST /scan` (dibatasi 60 request/menit). Input berupa `qr_code` dan `jenis_scan` (otomatis, masuk, pulang).
-- **Validasi Token**: Sistem mengambil *basename* dari URL jika QR memuat path URL penuh, kemudian mengecek token di tabel `gurus`.
-- **Pengecekan Izin**: Sebelum mencatat hadir, `PresensiService` mengecek apakah guru memiliki izin disetujui hari tersebut. Jika ada, scan ditolak (terjadi bentrok).
-- **Proses Presensi**: Jika valid, sistem memanggil fungsi `absenMasuk` atau `absenPulang`. Sistem juga melakukan pengecekan `tentukanJenisScanOtomatis` apabila input dari scanner adalah *otomatis*.
-- **Pencegahan Duplikat**: Berjalan dengan validasi kondisi, dimana guru tidak bisa `absenPulang` jika belum `absenMasuk`. Data unik dijaga oleh constraints `unique(['guru_id', 'tanggal'])` di skema `presensis`.
-- **Output**: JSON balasan berupa status kehadiran, sapaan suara (`speech`), nama guru, dan jam masuk/pulang. Terdapat penanganan *Error Logging* jika gagal.
+Seluruh halaman guru menggunakan kerangka layout yang sama dengan admin melalui `layouts.guru` yang mewarisi `layouts.admin`. Header, navigasi, warna, area gulir, menu HP, dan jam WIB menggunakan komponen bersama. Menu dan tautan profil dipilih sesuai peran pengguna; guru tidak diberi akses pengelolaan admin.
 
-## 9. Status Kehadiran
-Status kehadiran dikontrol dalam tabel `presensis` pada migrasi `2026_06_01_184729_create_presensis_table.php`.
-- **Allowed Statuses**: `belum_presensi`, `hadir`, `izin`, `sakit`, `cuti`, `dinas_luar`, `alpa`, `alfa`.
-- **Check-In**: Menyimpan `jam_masuk` pada jam saat scan.
-- **Check-Out**: Menyimpan `jam_pulang` pada jam saat scan.
-- **Keterlambatan (Lateness)**: `PresensiService` menggunakan konstanta `BATAS_MASUK_NORMAL` ('07:30:00'). Jika guru scan masuk di atas jam tersebut, *tidak ada status 'terlambat' secara enum*, melainkan field `keterangan` akan diisi kalimat: "Terlambat scan masuk pukul {jam}.".
-- **Status Alfa/Alpa**: Terdapat pada enum migrasi, kemungkinan dipakai pada saat penutupan hari atau *cron job* untuk guru yang tidak presensi (Tidak dapat dipastikan tanpa menjalankan aplikasi/mengecek schedule commands lengkap).
+Menu guru: Beranda, Jadwal Saya, Presensi Saya, Pengajuan, Riwayat Presensi, Arahan Kepala Sekolah, dan Profil Saya. Beranda menampilkan jadwal hari ini, status presensi, jumlah pengajuan, dan tautan layanan.
 
-## 10. Izin, Sakit, Cuti, dan Persetujuan
-- **Pihak yang Mengajukan**: Guru, melalui menu Pengajuan (`App\Http\Controllers\Guru\PengajuanController`).
-- **Formulir**: Memasukkan `jenis` (izin, sakit, cuti, dll), `tanggal_mulai`, `tanggal_selesai`, `alasan`, dan `lampiran` file jika ada.
-- **Pihak yang Menyetujui**: Kepala Sekolah, melalui `App\Http\Controllers\KepalaSekolah\PersetujuanController`.
-- **Siklus Persetujuan**: Menunggu $\rightarrow$ Disetujui/Ditolak.
-- **Sinkronisasi Otomatis**: Jika disetujui, `PresensiService->sinkronkanPengajuanDisetujui()` berjalan. Metode ini akan melakukan perulangan berdasarkan selang hari `tanggal_mulai` hingga `tanggal_selesai` (menggunakan `CarbonPeriod`) dan memasukkan/mengganti rekor `presensis` guru dengan status sesuai (izin/sakit/cuti) dan *metode input* = "Form Web". Ini menggunakan `upsert` massal ke database.
-- **Lampiran Dokumen**: Terdapat pengunduhan lampiran di route `kepsek.persetujuan.lampiran`.
+Halaman `/guru/jadwal` membaca `gurus.jadwal` melalui `JadwalGuruService`, yaitu sumber yang sama dengan pengaturan admin dan pemeriksaan presensi. Tujuh hari ditampilkan dengan status, batas masuk, dan mulai pulang dalam WIB. Hari ini ditandai. Hari tidak aktif tidak menampilkan jam seolah-olah dapat digunakan untuk presensi. Tersedia pemberitahuan untuk jadwal kosong, data guru belum terhubung, serta akun/status guru tidak aktif.
 
-## 11. Dashboard Admin
-- Berdasarkan `App\Http\Controllers\Admin\DashboardController.php`, Admin memiliki akses tampilan awal pasca-login. (Fitur widget spesifik hanya terdapat di View).
-- **Tersedia**: Halaman profil, manajemen guru, manajemen presensi, notifikasi.
+Jadwal hanya dapat dilihat oleh guru pemilik akun. Tidak ada formulir atau endpoint pembaruan jadwal bagi guru. Perubahan admin terlihat ketika halaman guru dibuka atau dimuat ulang; tidak ada penyalinan jadwal ke penyimpanan terpisah.
 
-## 12. Dashboard Guru
-- Berdasarkan `App\Http\Controllers\Guru\DashboardController.php`.
-- **Tersedia**: Rekapitulasi riwayat presensi, pengajuan absen, notifikasi profil.
+Validasi: 33 pengujian lulus (342 assertions), termasuk perubahan jadwal oleh admin, isolasi data guru, penolakan perubahan jadwal oleh guru, dan seluruh halaman guru dengan navigasi sesuai peran. Build aset serta kompilasi Blade berhasil. Pemeriksaan visual langsung di browser belum tersedia.
 
-## 13. Dashboard Kepala Sekolah
-- Berdasarkan `App\Http\Controllers\KepalaSekolah\DashboardController.php`.
-- **Tersedia**: Fitur monitoring presensi, persetujuan pengajuan absen guru, laporan.
+## Perbaikan kestabilan layout dan kata sandi guru
 
-*(Rincian visual/grafik/filter dashboard di atas tidak dapat dipastikan 100% tanpa membuka browser/menjalankan aplikasi, karena dikontrol penuh oleh blade view).*
+Kerangka admin menggunakan tinggi layar yang tetap, baris header tersendiri, serta ruang konten yang menggulir. Sidebar tidak lagi menggunakan tinggi layar penuh di bawah header; menu hanya menggulir jika ruang layar tidak mencukupi. Ruang bilah gulir konten dan lebar jam tetap dicadangkan agar posisi halaman tidak bergeser. Pada HP, menu dan konten tetap mempunyai batas tinggi yang jelas.
 
-## 14. Monitoring dan Laporan
-- **Monitoring Harian**: Ditemukan pada `App\Http\Controllers\KepalaSekolah\MonitoringController`. Mengambil daftar semua guru aktif dan mengecek status presensinya pada hari ini secara *real-time*. Jika belum scan, sistem mencetak status bayangan `belum_presensi` untuk view. *(Tersedia)*.
-- **Laporan/Ekspor File**: Ditemukan pada rute `kepsek.laporan.download` dan `admin.laporan.kirim`. Berhubungan dengan `LaporanController`. (PDF/Cetak: *Tersedia, mengacu pada laravel-dompdf di composer*).
+Formulir tambah dan ubah guru memakai urutan identitas, akun, lalu jadwal. Kata sandi dan konfirmasi berada pada satu baris di desktop dan tersusun vertikal pada HP.
 
-## 15. Pemetaan Route
-Tabel rute utama (berdasarkan keluaran `php artisan route:list`):
+Admin menentukan kata sandi akun guru sesuai kesepakatan sekolah. Akun baru wajib memiliki kata sandi dan konfirmasi yang sama, tanpa batas minimal 8 karakter atau syarat kombinasi karakter. Batas panjang validasi 72 karakter mengikuti penyimpanan yang ada. Sistem tidak lagi membuat kata sandi otomatis dari NIP, termasuk saat membuat akun untuk guru lama. Pada pembaruan akun yang sudah ada, kata sandi kosong berarti mempertahankan kata sandi lama. Kata sandi tetap disimpan sebagai hash.
 
-| No | Method | URL | Route Name | Controller | Method | Middleware | Role | Output |
-|----|--------|-----|------------|------------|--------|------------|------|--------|
-| 1 | GET | `/login` | `login` | `Auth\LoginController` | `create` | `guest` | Guest | Tampilan Login |
-| 2 | POST | `/login` | `login.store` | `Auth\LoginController` | `store` | `guest` | Guest | Redirect Dashboard |
-| 3 | POST | `/logout` | `logout` | `Auth\LoginController` | `destroy` | `auth` | All | Redirect Homepage |
-| 4 | GET | `/scan` | `scan.index` | `ScanController` | `index` | `web` | Guest | Tampilan Scanner |
-| 5 | POST | `/scan` | `scan.store` | `ScanController` | `store` | `throttle:60,1` | Guest | JSON (Validasi Absen) |
-| 6 | GET | `/dashboard` | `dashboard` | `Closure` | - | `auth` | All | Redirect Role |
-| 7 | GET | `/admin/guru` | `admin.guru.index` | `Admin\GuruController` | `index` | `admin` | Admin | Tabel Guru |
-| 8 | POST | `/admin/guru` | `admin.guru.store` | `Admin\GuruController` | `store` | `admin` | Admin | Simpan Guru Baru |
-| 9 | GET | `/guru/pengajuan` | `guru.pengajuan.index`| `Guru\PengajuanController`| `index` | `guru` | Guru | Form & Tabel Pengajuan |
-| 10 | POST | `/kepsek/persetujuan/{id}/setujui` | `kepsek.persetujuan.setujui` | `KepalaSekolah\PersetujuanController` | `setujui` | `kepsek` | Kepsek | Setujui & Update Presensi |
-| 11 | GET | `/kepsek/monitoring`| `kepsek.monitoring.index`| `KepalaSekolah\MonitoringController` | `index` | `kepsek` | Kepsek | Tabel Monitoring Real-time|
+## Pembaruan layout portal admin — 26 September 2026
 
-## 16. Pemetaan Controller
+Portal admin memakai gaya akademik sederhana dengan warna putih, abu-abu, dan biru tua. Panel sambutan bergambar sudah dihapus. Beranda berisi ringkasan data, grafik, dan tautan administrasi. Data Guru disusun sebagai daftar identitas ringkas; kode QR dibuka melalui bagian yang dapat dilipat. Formulir, jadwal, presensi, laporan, arahan, dan profil mengikuti gaya yang sama.
 
-| Controller | Fungsi Utama | Route/Fitur | Model/Service yang Digunakan |
-|------------|--------------|-------------|------------------------------|
-| `LoginController` | Autentikasi Pengguna & Sesi Tunggal | `/login`, `/logout` | `User`, `Auth` |
-| `ScanController` | Endpoint Publik Pemindaian QR | `/scan` (POST & GET) | `PresensiService`, `Guru` |
-| `GuruController` | CRUD Data Guru (Admin) | `/admin/guru/*` | `Guru`, `User`, `QRCodeService` |
-| `GuruCardController` | Melihat dan Mengunduh ID Card HTML | `/admin/guru/*/kartu` | `Guru`, `QRCodeService` |
-| `PengajuanController` | Proses input pengajuan (Izin/Sakit) oleh Guru | `/guru/pengajuan/*` | `Pengajuan`, `Guru` |
-| `PersetujuanController` | Persetujuan Cuti/Sakit oleh Kepsek | `/kepsek/persetujuan/*` | `Pengajuan`, `PresensiService` |
-| `MonitoringController` | Memonitor status absen harian | `/kepsek/monitoring` | `Guru`, `Presensi` |
+Jam, hari, dan tanggal pada header bergerak otomatis menggunakan zona `Asia/Jakarta` (WIB) dan bahasa Indonesia. Waktu awal berasal dari server; beranda menyinkronkannya kembali bersama grafik setiap 15 detik. Angka ringkasan juga diperbarui agar presensi hari ini mengikuti pergantian tanggal.
 
-## 17. Model dan Database
+Grafik beranda menampilkan **lima hari kerja, Senin sampai Jumat pada minggu berjalan**. Sabtu dan Minggu tetap menampilkan minggu tersebut; Senin memulai minggu baru. Hari mendatang dan hari tanpa presensi bernilai nol. Grafik menghitung guru yang mempunyai jam masuk. Grafik laporan tetap mengikuti periode laporan mingguan atau bulanan yang dipilih.
 
-| Tabel | Fungsi | Kolom Penting | Primary Key | Foreign Key | Relasi | Digunakan Pada |
-|-------|--------|---------------|-------------|-------------|--------|----------------|
-| `users` | Akun Autentikasi | `name`, `username`, `email`, `role`, `is_active`, `active_session_id` | `id` | - | 1 to 1 (`Guru`) | `LoginController`, `GuruController` |
-| `gurus` | Master Data Guru | `nip`, `nama`, `mata_pelajaran`, `token_qr`, `status` | `id` | `user_id` | 1 to M (`Presensi`, `Pengajuan`) | `GuruController`, Manajemen Master |
-| `presensis` | Catatan Kehadiran Harian | `tanggal`, `jam_masuk`, `jam_pulang`, `status`, `metode_input`, `keterangan` | `id` | `guru_id` | BelongsTo (`Guru`) | `ScanController`, `MonitoringController` |
-| `pengajuans` | Record Cuti/Izin/Sakit | `jenis`, `tanggal_mulai`, `tanggal_selesai`, `alasan`, `status`, `disetujui_oleh` | `id` | `guru_id`, `disetujui_oleh` | BelongsTo (`Guru`, `User` as approver) | `PengajuanController`, `PersetujuanController` |
-| `notifikasis` | Pesan / Pemberitahuan | `judul`, `pesan`, `is_read` | `id` | `user_id` | BelongsTo (`User`) | Modul Notifikasi |
+Istilah antarmuka, navigasi halaman, serta pesan validasi formulir admin menggunakan bahasa Indonesia. Nama teknis kolom database dan rute tetap dipertahankan. Tampilan HP menggunakan menu lipat, susunan vertikal, serta tabel yang dapat digeser.
 
-*Catatan: Tabel `presensi_qr_codes` ditemukan dalam migrasi, namun tidak dipakai dominan pada alur `PresensiService`.*
+CSS dan JavaScript layout admin menggunakan versi berdasarkan waktu perubahan file agar browser mengambil aset terbaru. Seluruh 29 pengujian PHP lulus (245 assertions), termasuk pergantian minggu dan pemuatan halaman admin. Pengujian JavaScript jam berhasil melewati Sabtu, Minggu, dan Senin tanpa memuat ulang. Build Vite dan kompilasi Blade berhasil. Pemeriksaan visual browser belum tersedia pada sesi ini.
 
-## 18. Pemetaan Fitur: Input, Proses, Output
+## Pembaruan admin — 25 September 2026
 
-| No | Fitur | Input | Proses | Output | Role | Route | Database | Status |
-|----|-------|-------|--------|--------|------|-------|----------|--------|
-| 1 | Login Sistem | Email/Username, Password | Validasi Auth, cek `is_active` dan `active_session_id` | Redirect ke Dashboard | Semua | `/login` | `users` | Berfungsi berdasarkan kode |
-| 2 | Tambah Guru Baru | Form Data Diri Guru | Menyimpan record `gurus`, `users`, generate `token_qr` acak | Pesan Sukses | Admin | `/admin/guru` | `gurus`, `users` | Berfungsi berdasarkan kode |
-| 3 | Download Kartu QR | ID Guru | Ambil token QR, SVG Render | HTML File Download | Admin | `admin.guru.kartu.download`| `gurus` | Berfungsi berdasarkan kode |
-| 4 | Scan Kehadiran | Teks QR Code dari kamera | Validasi UUID, Lookup Token, Cek status Izin, Tulis Waktu Hadir | JSON Respons (Speech text, jam) | Tamu/Semua | `/scan` | `gurus`, `presensis` | Berfungsi berdasarkan kode |
-| 5 | Pengajuan Izin | Rentang waktu, Alasan, Lampiran | Buat record `pengajuans` berstatus menunggu | Pesan Sukses | Guru | `/guru/pengajuan`| `pengajuans` | Berfungsi berdasarkan kode |
-| 6 | Approval Izin | ID Pengajuan, Keputusan | Ubah status `disetujui`, loop `CarbonPeriod` insert ke `presensis` | Pesan Sukses | Kepsek | `/kepsek/persetujuan/{id}/setujui` | `pengajuans`, `presensis`| Berfungsi berdasarkan kode |
-| 7 | Monitoring Harian | - | Loop semua guru `aktif`, periksa status record `presensis` harian | Tabel UI View | Kepsek | `/kepsek/monitoring` | `gurus`, `presensis` | Berfungsi berdasarkan kode |
+Antarmuka admin memakai layout `resources/views/layouts/admin.blade.php`, navigasi dan header di `resources/views/admin/partials/`, stylesheet `public/assets/css/admin.css`, serta perilaku menu HP di `public/assets/js/admin-navigation.js`.
 
-## 19. Use Case
-Kode seperti *UC19*, *UC24* tidak ditemukan secara tertulis dalam source code. Identifier use case berikut adalah identifier *dokumentasi (rekonstruksi)* untuk memetakan arsitektur yang sudah berjalan:
+Menu aktif: Beranda, Data Guru, Jadwal Guru, Presensi, Laporan, Arahan Kepala Sekolah, dan Profil Saya. Navigasi dikelompokkan menjadi ringkasan, administrasi akademik, serta komunikasi dan akun. Pada layar hingga 980 px, menu dapat dibuka-tutup; tombol Escape menutup menu dan mengembalikan fokus. Tanpa JavaScript, menu tetap dapat digunakan melalui elemen HTML `details`. Tabel lebar dapat digeser tanpa melebarkan seluruh halaman.
 
-| Kode | Nama Use Case | Aktor | Input | Proses | Output | Route | Bukti |
-|------|---------------|-------|-------|--------|--------|-------|-------|
-| UC-AUTH-01 | Single Session Login | Admin, Kepsek | Kredensial | Mengecek `active_session_id`, membatasi sesi ganda | Redirect Dashboard / Tolak login | `/login` | `LoginController.php` |
-| UC-ADMIN-01| Pembuatan Akun Guru & QR | Admin | NIP, Nama, Jabatan | Save `users`, Save `gurus`, Trigger `QRCodeService` | Akun Terbuat + Token GURU-xxx | `admin.guru.store` | `GuruController.php` |
-| UC-GURU-01 | Permohonan Cuti/Izin | Guru | Tanggal, Alasan | Create `pengajuans` default `menunggu` | Form tersimpan | `guru.pengajuan.store`| `PengajuanController.php` |
-| UC-SCAN-01 | Absen Masuk Otomatis | Sistem Publik | QR Scanner | Pengecekan Token, Waktu Jam Masuk (cek terlambat jam 07:30) | Record kehadiran baru / Terlambat | `/scan` | `ScanController.php`, `PresensiService.php` |
-| UC-KEP-01 | Persetujuan Izin (Sinkronisasi) | Kepsek | ID Pengajuan | Status dirubah, *Bulk Upsert* ke tabel `presensis` | Izin masuk pada absen harian | `kepsek.persetujuan.setujui`| `PersetujuanController.php` |
+### Struktur dan pembersihan
 
-## 20. Fitur yang Tersedia
-Fitur-fitur ini dapat dipastikan benar-benar ada dan berjalan di *backend* (berdasarkan file Controllers dan Services):
-- Autentikasi dan Otorisasi Multi-Level (Admin, Guru, Kepala Sekolah).
-- Single-Session Validation untuk Admin dan Kepsek.
-- Master Data Manajemen Guru (Otomatisasi Akun Login).
-- Pembuatan QR Token Unik `(GURU-{string})` secara otomatis.
-- Cetak ID Card Guru beserta SVG QR.
-- Public Scan Endpoint berbasis JSON Response (mengakomodasi hardware scan maupun web-cam).
-- Manajemen Logika Keterlambatan Otomatis (pukul 07:30 batas masuk).
-- Pengajuan Izin/Sakit/Cuti beserta Fitur Lampiran.
-- Mekanisme Persetujuan/Tolak oleh Kepala Sekolah beserta Injeksi Data Presensi Otomatis.
-- Monitoring Kehadiran "Hari Ini" bagi Kepala Sekolah.
+- Controller dan tampilan lama kartu guru, direktori guru, peluncur scan admin, formulir jadwal terpisah, dan formulir password admin yang tidak digunakan telah dibersihkan. Pengelolaan jadwal tetap melalui Data Guru, kartu PDF melalui Jadwal Guru, dan password melalui Profil.
+- Rute kompatibilitas yang masih aktif tetap dipertahankan; endpoint pembaruan profil pengguna lama masih digunakan dan tidak dihapus.
+- QR aktif tetap menggunakan `gurus.token_qr`; jadwal menggunakan kolom JSON `gurus.jadwal`.
+- Migrasi `2026_09_25_000001_remove_unused_presensi_qr_codes_table` menghapus tabel QR generasi lama hanya jika kosong. Jika berisi data, migrasi berhenti agar data dapat diarsipkan dahulu. Rollback membuat kembali skema tabel kosong.
+- Migrasi historis dipertahankan agar instalasi baru dan rollback tetap dapat dijalankan secara berurutan. Jangan memakai `migrate:fresh` pada database aktif.
+- Query filter hari aktif diperbaiki menjadi `jadwal->{$nomor}->aktif` agar nomor hari tidak ditafsirkan sebagai objek PHP.
 
-## 21. Fitur yang Belum Lengkap atau Tidak Ditemukan
-- **Hardware Integrasi**: Tidak ditemukan perintah khusus untuk berinteraksi dengan API Mesin IoT/Fingerprint dalam source code; Scanner murni menggunakan parameter URL POST form biasa (kemungkinan memakai web cam di view frontend).
-- **Notifikasi Email/WA**: Meski ada tabel `notifikasis`, tidak ditemukan sinkronisasi pengiriman eksternal (menggunakan `Mail` atau `Twilio/Wablas`) saat presensi disetujui. Notifikasi hanya berupa data di database (In-app notifications).
-- **Status Alfa Otomatis**: Tidak ditemukan *Cron Job* (`app/Console/Commands/` atau `routes/console.php` yang terisi) yang secara berkala memasukkan guru berstatus "Alfa" jika tidak scan sampai waktu pulang selesai. Status Alfa murni tersedia di Enum database.
+### Pemeriksaan database lokal
 
-## 22. Bagian yang Memerlukan Verifikasi
-- **Tampilan Visual / Filter Laporan**: Grafik chart pada Dashboard, rentang periode filter, dan hasil output cetak tabel PDF memerlukan eksekusi *runtime* (dibuka melalui browser) karena berada di dalam file `.blade.php`.
-- **Scan Kamera Frontend**: Mekanisme `html5-qrcode` memanipulasi *DOM browser*, ini perlu diuji langsung di perangkat untuk memastikan pemanggilan `POST /scan` berjalan mulus pasca-pembacaan bingkai kamera.
+Saat audit: koneksi MySQL, 2 akun, 1 guru, 0 presensi, 0 pengajuan, 0 notifikasi, dan 0 QR pada tabel lama. Tidak ditemukan guru tanpa akun atau presensi tanpa guru. Kolom jadwal tersedia dan migrasi sebelumnya sudah dijalankan. Data akun, guru, jadwal, dan QR aktif tidak dihapus.
 
-## 23. Kesimpulan Cara Kerja Sistem
-Sistem presensi ini menggunakan pendekatan sentralisasi data guru dengan sistem *Self-Service QR*. Saat Admin mendaftarkan guru, sistem merangkai entitas `User`, `Guru`, dan `QR Token`. Pemindaian kehadiran dilakukan dari halaman publik (dibatasi *throttle* rate-limit) menggunakan API berbasis JSON, sehingga cocok dipakai via tablet stand atau perangkat kamera web sekolah. Sistem menaruh logika absensi berat pada layer Service (`PresensiService`) untuk menangani konflik izin-absensi, pengecekan keterlambatan otomatis, dan validasi jam pulang. Hak persetujuan mutlak dipegang oleh Kepala Sekolah, dimana persetujuan izin otomatis memodifikasi (upsert) kalender absensi harian guru.
+Migrasi pembersihan sudah dijalankan pada MySQL lokal: tabel `presensi_qr_codes` telah dihapus dan jumlah data aktif tetap sama. Seluruh 26 pengujian lulus (179 assertions); build Vite, kompilasi Blade, dan pemeriksaan sintaks JavaScript berhasil.
+
+Pengujian menggunakan database SQLite sementara (`:memory:`), bukan database aktif. Pemeriksaan visual browser belum tersedia pada sesi ini; ukuran layar dan interaksi sentuh tetap perlu ditinjau langsung pada perangkat.
+
+## Catatan kebutuhan sebelumnya
+
+PROMPT UPDATE MENU ADMIN
+
+Saya ingin melakukan perubahan hanya pada menu Admin yang sebelumnya bernama "Scan Presensi".
+
+1. Ubah Nama Menu
+
+Ubah nama menu:
+
+Scan Presensi → Jadwal Guru
+
+Menu Scan Presensi tidak lagi digunakan sebagai menu scan QR Code Admin.
+
+2. Fungsi Menu Jadwal Guru
+
+Menu Jadwal Guru digunakan untuk melihat seluruh data jadwal guru yang sudah ditambahkan oleh Admin melalui menu Data Guru.
+
+Tampilkan daftar seluruh guru beserta:
+
+- Nama guru
+- Data/identitas guru yang diperlukan
+- Jadwal guru
+- Hari
+- Jam
+- QR Code guru
+- Status/data lain yang memang sudah tersedia di sistem
+
+Data harus mengambil langsung dari database yang sudah ada.
+
+3. Kartu Guru / PDF
+
+Pada menu Jadwal Guru, Admin dapat memilih guru dan membuat/download PDF kartu guru.
+
+PDF harus berisi:
+
+- Kop surat sekolah
+- Nama/logo sekolah jika sudah tersedia di project
+- Nama guru
+- Identitas guru yang diperlukan
+- Jadwal guru
+- QR Code guru
+
+PDF harus memiliki desain yang rapi, profesional, dan siap dicetak atau dibagikan kepada guru.
+
+4. QR Code
+
+Jangan membuat ulang sistem pembuatan QR Code.
+
+QR Code sudah dibuat otomatis pada menu Data Guru ketika Admin menambahkan akun guru, password, dan jadwal guru.
+
+Menu Jadwal Guru hanya menampilkan dan menggunakan QR Code yang sudah tersimpan/terhubung dengan data guru tersebut.
+
+Jika jadwal guru berubah di Data Guru, maka informasi jadwal yang ditampilkan pada menu Jadwal Guru dan PDF harus mengikuti data terbaru.
+
+5. Jangan Mengubah Fitur Lain
+
+Jangan mengubah:
+
+- Command Center
+- Data Guru
+- Presensi
+- Laporan
+- Arahan Kepsek
+- Profil Admin
+- Sistem login
+- Sistem QR Code yang sudah ada
+- Sistem presensi yang sudah berjalan
+
+Kecuali perubahan yang benar-benar diperlukan untuk mengganti menu Scan Presensi menjadi Jadwal Guru.
+
+Jangan membuat fitur tambahan di luar permintaan ini.
+
+Struktur Admin Setelah Perubahan
+
+ADMIN
+│
+├── Command Center
+├── Data Guru
+│   ├── Tambah Guru
+│   ├── Tambah Jadwal
+│   ├── Edit Guru
+│   ├── Edit Jadwal
+│   ├── Ubah Password Guru
+│   ├── Hapus Guru
+│   └── QR Code otomatis
+│
+├── Presensi
+│
+├── Jadwal Guru
+│   ├── Lihat semua guru
+│   ├── Lihat jadwal semua guru
+│   ├── Lihat QR Code
+│   └── Download PDF Kartu Guru
+│
+├── Laporan
+├── Arahan Kepsek
+└── Profil
+    ├── Edit Profil Admin
+    ├── Edit Username
+    └── Edit Password
+
+Intinya: QR Code dibuat otomatis di Data Guru. Menu "Jadwal Guru" hanya digunakan untuk melihat jadwal seluruh guru dan menyediakan kartu guru/PDF yang siap dibagikan.

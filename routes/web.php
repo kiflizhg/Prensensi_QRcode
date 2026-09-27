@@ -5,13 +5,7 @@ use App\Http\Controllers\Admin\TerminalScanController;
 use App\Http\Controllers\ScanController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    if (! auth()->check()) {
-        return redirect()->route('login');
-    }
-
-    return redirect()->route('dashboard');
-});
+Route::get('/', fn () => view('welcome', ['page' => \App\Models\PublicPage::content()]))->name('home');
 
 // Public scanner terminal — no auth required
 // POST /scan is rate-limited: 60 requests per minute per IP

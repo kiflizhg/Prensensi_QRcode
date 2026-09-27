@@ -20,6 +20,11 @@ class Guru extends Model
         'token_qr',
     ];
 
+    protected function casts(): array
+    {
+        return ['jadwal' => 'array'];
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

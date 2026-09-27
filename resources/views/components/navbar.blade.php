@@ -1,7 +1,7 @@
 <header class="topbar">
     <div>
         <strong>{{ $title ?? 'Sistem Informasi Kehadiran Guru' }}</strong>
-        <span>{{ $subtitle ?? 'SMK Islam Cipasung - Yayasan Bpk. KH. H. Acep Adang Ruhiyat' }}</span>
+        <span>{{ $subtitle ?? 'SMK Islam Cipasung - Hargai waktu, hadir tepat waktu, berkarya sepenuh hati.' }}</span>
     </div>
     <div class="topbar-meta">
         <span>{{ now()->translatedFormat('d F Y') }}</span>

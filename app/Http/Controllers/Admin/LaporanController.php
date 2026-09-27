@@ -3,16 +3,35 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Services\NotificationService;
+use App\Models\Presensi;
+use App\Services\AdminPresensiChartService;
 use App\Services\LaporanService;
+use App\Services\NotificationService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class LaporanController extends Controller
 {
     public function index(Request $request, LaporanService $laporanService)
     {
+        $data = $request->validate([
+            'periode' => ['nullable', 'in:mingguan,bulanan'],
+            'bulan' => ['nullable', 'date_format:Y-m'],
+            'tanggal' => ['nullable', 'date_format:Y-m-d'],
+        ]);
+        $periode = $data['periode'] ?? 'bulanan';
+        $tanggal = Carbon::parse($data['tanggal'] ?? today()->toDateString());
+        $bulan = $data['bulan'] ?? now()->format('Y-m');
+        $mulai = $periode === 'mingguan' ? $tanggal->copy()->startOfWeek() : Carbon::parse($bulan.'-01');
+        $selesai = $periode === 'mingguan' ? $mulai->copy()->endOfWeek() : $mulai->copy()->endOfMonth();
+
         return view('admin.laporan.index', [
-            'presensis' => $laporanService->rekapBulanan($request->query('bulan')),
+            'presensis' => Presensi::with('guru')->whereBetween('tanggal', [$mulai->toDateString(), $selesai->toDateTimeString()])->latest('tanggal')->get(),
+            'grafik' => app(AdminPresensiChartService::class)->harian($mulai, $selesai),
+            'periode' => $periode,
+            'bulan' => $bulan,
+            'tanggal' => $tanggal->toDateString(),
+            'rentang' => $mulai->format('d/m/Y').' - '.$selesai->format('d/m/Y'),
         ]);
     }
 

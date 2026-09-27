@@ -42,7 +42,7 @@
             @endif
         </div>
         <div class="kop-text">
-            <h1>YAYASAN BPK. KH. H. ACEP ADANG RUHIYAT</h1>
+            <h1>Hargai waktu, hadir tepat waktu, berkarya sepenuh hati.</h1>
             <h2>SMK ISLAM CIPASUNG</h2>
             <p>Cipasung, Singaparna, Kabupaten Tasikmalaya</p>
             <p class="muted">Dokumen laporan presensi guru resmi sekolah</p>

@@ -19,6 +19,8 @@ class GuruMiddleware
             abort(403, 'Halaman ini hanya untuk guru.');
         }
 
+        app()->setLocale('id');
+
         return $next($request);
     }
 }

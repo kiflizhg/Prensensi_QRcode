@@ -1,12 +1,12 @@
 @extends('layouts.admin')
 
-@section('title', 'Edit Profil Pengguna')
+@section('title', 'Ubah Profil Pengguna')
 
 @section('content')
 <section class="page-hero compact">
     <div>
-        <span class="page-kicker">Edit Profile</span>
-        <h2 class="page-title">Edit Profil {{ $user->role === 'kepala_sekolah' ? 'Kepala Sekolah' : 'Guru' }}</h2>
+        <span class="page-kicker">Ubah Profil</span>
+        <h2 class="page-title">Ubah Profil {{ $user->role === 'kepala_sekolah' ? 'Kepala Sekolah' : 'Guru' }}</h2>
         <p class="page-subtitle">Perbarui identitas, status akun, dan foto profil yang akan terlihat di halaman profil pengguna.</p>
     </div>
     <a class="btn ghost" href="{{ route('admin.direktori_guru.index') }}">Kembali</a>
@@ -37,11 +37,11 @@
             <input name="name" value="{{ old('name', $user->guru?->nama ?? $user->name) }}" required>
         </div>
         <div>
-            <label>Username</label>
+            <label>Nama Pengguna</label>
             <input name="username" value="{{ old('username', $user->username) }}" placeholder="contoh: guru001">
         </div>
         <div>
-            <label>Email</label>
+            <label>Alamat Surel</label>
             <input type="email" name="email" value="{{ old('email', $user->email) }}" required>
         </div>
         <div>

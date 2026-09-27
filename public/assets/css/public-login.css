@@ -1,0 +1,41 @@
+.login-body{--primary:#205c49;--primary-dark:#173c35;--muted:#69796f;background:#f4f6f1;color:#173c35;margin:0;min-height:100vh;min-height:100dvh}
+.login-body .login-page{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:100vh;min-height:100dvh}
+.login-body .login-card{width:calc(100% - 64px);max-width:440px;margin:32px auto;padding:36px;border:1px solid #dde5da;border-radius:22px;background:#fff;box-shadow:0 16px 48px #193f3408;min-width:0;align-self:center}
+.login-body .login-visual{background:#193f34;min-height:100vh}.login-body .login-visual h1{font-family:Georgia,serif;font-weight:400;line-height:1.2}.login-body .brand{gap:12px;min-width:0}.login-body .brand-logo{width:46px;height:46px;flex:0 0 46px;object-fit:contain;box-shadow:none}.login-body .brand strong{font-size:16px;color:#173c35}.login-body .brand small{font-size:12px;color:#738075;line-height:1.5;white-space:normal}
+.login-body .login-card h1{margin:30px 0 8px;color:#173c35;font-size:28px;letter-spacing:-.7px;line-height:1.25}.login-body .login-intro{font-size:14px;line-height:1.65;margin:0 0 24px}.login-body .login-home-link{display:inline-flex;align-items:center;min-height:44px;font-size:12px;color:#38604e;margin-bottom:6px;text-decoration:none}
+.login-body label{display:block;font-size:13px;font-weight:600;margin:0 0 8px}.login-body input:not([type=checkbox]){display:block;width:100%;min-width:0;height:52px;font-size:16px;line-height:1.4;padding:13px 14px;border:1px solid #cfd9ce;border-radius:10px;background:#fbfcfa;color:#173c35;box-sizing:border-box;margin:0 0 20px;box-shadow:none}.login-body input::placeholder{color:#839083;font-size:14px}.login-body input:focus{outline:3px solid #205c4920;border-color:#205c49}.login-body .login-password-wrap{position:relative;margin-bottom:16px}.login-body .login-password-wrap input{margin:0;padding-right:102px}.login-body .login-password-toggle{position:absolute;right:5px;top:4px;min-width:88px;height:44px;padding:0 8px;border:0;background:transparent;color:#205c49;font:600 11px system-ui;cursor:pointer;border-radius:7px}.login-password-toggle[hidden]{display:none}
+.login-body .check-row{display:flex;align-items:center;gap:10px;min-height:44px;margin:0 0 14px;font-size:13px;font-weight:400;cursor:pointer}.login-body .check-row input{width:18px;height:18px;min-height:18px;flex-shrink:0;margin:0;padding:0;accent-color:#205c49}.login-body .login-submit{width:100%;min-height:52px;border-radius:10px;background:#205c49;font-size:15px;font-weight:650;margin:0;border:0;cursor:pointer}.login-body .login-submit:hover{background:#173f32}.login-body .login-help{font-size:12px;line-height:1.6;text-align:center;margin:22px 0 0;padding-top:20px;border-top:1px solid #edf0e9}.login-body :is(a,button):focus-visible{outline:3px solid #b79b59;outline-offset:3px}.login-body .alert{overflow-wrap:anywhere;font-size:13px}
+/* Identitas akademik dan banner yang tetap terlihat di ponsel. */
+.login-body{--primary:#243e59;--primary-dark:#192f45;--muted:#657486;background:#f2f4f7;color:#243e59}
+.login-body .login-page{max-width:1440px;margin:auto;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+.login-body .login-visual{display:flex;padding:48px;min-height:100vh;background:#192f45;isolation:isolate}
+.login-body .login-visual>img{filter:none;object-position:center}
+.login-body .login-visual:after{background:linear-gradient(180deg,rgba(15,35,55,.08) 20%,rgba(15,35,55,.88) 100%)}
+.login-body .login-visual>div{padding:0;border:0;border-radius:0;background:none;max-width:460px}
+.login-body .login-visual .login-banner-kicker{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.16em;color:#f4dba0;border-left:3px solid #d2ae66;padding-left:12px}
+.login-body .login-visual h2{font-family:Georgia,serif;font-size:clamp(30px,3.1vw,46px);font-weight:400;line-height:1.18;color:#fff;margin:20px 0 16px}
+.login-body .login-visual p{font-size:14px;line-height:1.7;color:#e1e7ef;max-width:380px}
+.login-body .login-card{border:1px solid #e0e5ec;border-top:3px solid #bf9a51;border-radius:14px;box-shadow:0 16px 50px #152d4510}
+.login-body .brand strong{color:#243e59}.login-body .brand small{color:#657486}
+.login-body .login-section-label{display:block;font-size:10px;letter-spacing:.14em;font-weight:700;color:#927237;margin-top:28px}
+.login-body .login-card h1{margin-top:9px;font-family:Georgia,serif;font-size:32px;letter-spacing:-.5px;color:#243e59;font-weight:400}
+.login-body .login-home-link{color:#47617a}.login-body input:not([type=checkbox]){border-color:#d6dee7;background:#fafbfd;color:#243e59}.login-body input:focus{outline-color:#243e5925;border-color:#385976}
+.login-body .login-password-toggle{color:#345574}.login-body .check-row input{accent-color:#243e59}.login-body .login-submit{background:#243e59;color:#fff}.login-body .login-submit:hover{background:#192f45}
+@media(max-width:980px){
+ .login-body .login-page{grid-template-columns:minmax(0,1fr);padding:0 0 36px;align-content:start}
+ .login-body .login-visual{display:flex;min-height:0;height:300px;padding:32px max(28px,calc((100vw - 520px)/2));align-items:flex-end}
+ .login-body .login-visual h2{font-size:32px;margin:14px 0 10px}.login-body .login-visual p{font-size:13px}
+ .login-body .login-card{position:relative;z-index:2;max-width:480px;width:calc(100% - 40px);margin:24px auto 0;padding:30px}
+}
+@media(max-width:600px){
+ .login-body .login-page{padding:0 0 calc(24px + env(safe-area-inset-bottom));min-height:100vh;min-height:100dvh}
+ .login-body .login-visual{display:flex;height:220px;min-height:220px;padding:24px max(22px,env(safe-area-inset-right)) 26px max(22px,env(safe-area-inset-left))}
+ .login-body .login-visual>img{object-position:center 40%}.login-body .login-visual h2{font-size:26px;line-height:1.2;margin:12px 0 8px}.login-body .login-visual p{font-size:11px;line-height:1.5;max-width:290px}
+ .login-body .login-visual .login-banner-kicker{font-size:9px;letter-spacing:.12em}
+ .login-body .login-card{width:calc(100% - 32px);max-width:440px;margin:18px auto 0;padding:24px 22px;border-radius:12px;background:#fff}
+ .login-body .brand-logo{width:42px;height:42px;flex-basis:42px}.login-body .brand strong{font-size:14px}.login-body .brand small{font-size:11px}
+ .login-body .login-section-label{margin-top:24px;font-size:9px}.login-body .login-card h1{font-size:29px;margin-top:8px}.login-body .login-intro{font-size:13px;margin-bottom:20px}.login-body .login-home-link{font-size:11px}
+ .login-body input:not([type=checkbox]){scroll-margin-top:20px}.login-body .login-help{font-size:11px;margin-top:20px}
+}
+@media(max-width:360px){.login-body .login-card{width:calc(100% - 24px);padding:22px 18px}.login-body .login-visual{padding-left:18px;padding-right:18px}.login-body .login-visual h2{font-size:24px}.login-body .brand{gap:9px}.login-body .brand strong{font-size:13px}}
+@media(max-height:550px) and (orientation:landscape){.login-body .login-visual{height:190px;min-height:190px;padding:20px}.login-body .login-visual h2{font-size:25px}}

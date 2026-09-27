@@ -1,43 +1,23 @@
 @extends('layouts.kepsek')
-
 @section('content')
-<section class="page-hero compact">
-    <div>
-        <span class="page-kicker">Approval Desk</span>
-        <h2 class="page-title">Persetujuan Pengajuan Guru</h2>
-        <p class="page-subtitle">Tinjau pengajuan guru dan tetapkan keputusan agar status presensi tersinkronisasi.</p>
+<section class="page-hero compact"><div><span class="page-kicker">Pengajuan Guru</span><h1 class="page-title">Persetujuan Pengajuan</h1><p class="page-subtitle">Tinjau alasan dan lampiran sebelum memberikan keputusan.</p></div></section>
+<div class="kepsek-teachers">
+@forelse ($pengajuans as $pengajuan)
+<article class="card">
+    <h2 class="compact-title">{{ $pengajuan->guru->nama }}</h2>
+    <span class="status-pill">{{ ucfirst(str_replace('_', ' ', $pengajuan->jenis)) }} · {{ ucfirst($pengajuan->status) }}</span>
+    <p>{{ $pengajuan->tanggal_mulai->format('d-m-Y') }} sampai {{ $pengajuan->tanggal_selesai->format('d-m-Y') }}</p>
+    <p>{{ $pengajuan->alasan }}</p>
+    @if ($pengajuan->lampiran)<a class="btn ghost" href="{{ route('kepsek.persetujuan.lampiran', $pengajuan) }}" target="_blank" rel="noopener">Lihat Surat</a>@endif
+    @if ($pengajuan->status === 'menunggu')
+    <div class="kepsek-decision">
+        <form method="post" action="{{ route('kepsek.persetujuan.setujui', $pengajuan) }}">@csrf<button class="btn" type="submit">Setujui</button></form>
+        <form method="post" action="{{ route('kepsek.persetujuan.tolak', $pengajuan) }}">@csrf<button class="btn danger" type="submit">Tolak</button></form>
     </div>
-</section>
-<table>
-    <thead><tr><th>Guru</th><th>Jenis</th><th>Tanggal</th><th>Surat</th><th>Status</th><th>Aksi</th></tr></thead>
-    <tbody>
-        @forelse ($pengajuans as $pengajuan)
-            <tr>
-                <td>{{ $pengajuan->guru->nama }}</td>
-                <td>{{ $pengajuan->jenis }}</td>
-                <td>{{ $pengajuan->tanggal_mulai->format('d-m-Y') }} s.d. {{ $pengajuan->tanggal_selesai->format('d-m-Y') }}</td>
-                <td>
-                    @if ($pengajuan->lampiran)
-                        <a class="btn ghost" href="{{ route('kepsek.persetujuan.lampiran', $pengajuan) }}" target="_blank">@include('components.icon', ['name' => 'report']) Lihat Surat</a>
-                    @else
-                        -
-                    @endif
-                </td>
-                <td>{{ $pengajuan->status }}</td>
-                <td>
-                    <div class="table-actions">
-                        @if ($pengajuan->status === 'menunggu')
-                            <form method="post" action="{{ route('kepsek.persetujuan.setujui', $pengajuan) }}">@csrf<button class="btn" type="submit">@include('components.icon', ['name' => 'check']) Setujui</button></form>
-                            <form method="post" action="{{ route('kepsek.persetujuan.tolak', $pengajuan) }}">@csrf<button class="btn danger" type="submit">Tolak</button></form>
-                        @else
-                            <span class="badge {{ $pengajuan->status === 'disetujui' ? 'success' : 'danger' }}">{{ ucfirst($pengajuan->status) }}</span>
-                        @endif
-                    </div>
-                </td>
-            </tr>
-        @empty
-            <tr><td colspan="6">Belum ada pengajuan yang perlu ditinjau.</td></tr>
-        @endforelse
-    </tbody>
-</table>
+    @endif
+</article>
+@empty
+<p class="card empty-state">Belum ada pengajuan yang perlu ditinjau.</p>
+@endforelse
+</div>
 @endsection

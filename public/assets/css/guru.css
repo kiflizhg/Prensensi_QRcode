@@ -1,0 +1,64 @@
+/* Tampilan layanan guru; kerangka dan data tetap mengikuti portal sekolah. */
+.guru-body{--primary:#326c77;--primary-dark:#254650;--line:#dce6e8;--muted:#60757c;background:#f3f7f8;color:#29424b}
+.guru-body .admin-header{border-top:3px solid var(--primary)}
+.guru-body .portal-school small{color:var(--primary)}
+.guru-body .sidebar nav a.active{background:#e8f2f4;color:#285c66;box-shadow:inset 3px 0 #326c77}
+.guru-body .content{max-width:1240px;padding:28px 32px}
+.guru-body .page-hero{border:0;padding-bottom:0;margin-bottom:24px}
+.guru-body .page-title{font-size:26px;line-height:1.3}
+.guru-body .page-subtitle{font-size:14px;line-height:1.7}
+.guru-body .card,.guru-body .portal-metric,.guru-body .portal-shortcuts{border-radius:12px;background:#fff;border:1px solid var(--line)}
+.guru-body .btn{min-height:48px;border-radius:8px;font-size:14px;padding:12px 18px}
+.guru-body input,.guru-body select,.guru-body textarea{border-radius:8px;min-height:48px;font-size:16px}
+.guru-body label{font-size:14px;font-weight:600}
+.guru-body .teacher-metrics{gap:16px}.guru-body .teacher-metrics .portal-metric{padding:22px;gap:14px}
+.guru-body .teacher-metrics strong{font-size:21px;line-height:1.4}
+.guru-body .teacher-metrics small{font-size:12px;line-height:1.6}
+.guru-body .teacher-metrics div>span{font-size:13px}
+.guru-body .metric-icon,.guru-body .shortcut-icon{background:#e9f3f4;color:var(--primary);border-radius:10px;width:42px;height:42px;flex-basis:42px}
+.guru-body .teacher-shortcuts{padding:24px;gap:0 24px}
+.guru-body .teacher-shortcuts a{padding:18px 0;min-height:84px}
+.guru-body .teacher-shortcuts strong{font-size:14px}
+.guru-body .teacher-shortcuts small{font-size:12px;line-height:1.6}
+.teacher-guidance{display:flex;gap:14px;padding:18px 20px;background:#eaf3f5;border:1px solid #d4e5e9;border-radius:10px;margin:0 0 24px;align-items:flex-start}
+.teacher-guidance>.icon{margin-top:4px;color:#326c77}.teacher-guidance p{margin:4px 0 0;font-size:13px;line-height:1.7;color:var(--muted)}.teacher-guidance strong{font-size:14px}
+.teacher-week{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:20px}
+.teacher-day{border:1px solid var(--line);border-radius:10px;padding:18px;background:#fff;min-width:0}
+.teacher-day.is-today{border:2px solid #326c77;background:#f4fafb;padding:17px}
+.teacher-day header{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}
+.teacher-day h3{font-size:16px;margin:0;font-weight:650}.teacher-day header span{font-size:11px;background:#326c77;color:#fff;border-radius:5px;padding:3px 8px}
+.teacher-day-status{font-size:12px;color:var(--muted);margin:0 0 12px}
+.teacher-day dl{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0}
+.teacher-day dt{font-size:12px;color:var(--muted)}.teacher-day dd{margin:4px 0 0;font-size:21px;color:var(--primary-dark);font-weight:600}
+.teacher-bottom-nav{display:none}
+@media(max-width:980px){
+    body.guru-body{grid-template-rows:auto minmax(0,1fr) auto}
+    .guru-body .admin-header{padding:12px 20px;gap:10px;flex-wrap:wrap}
+    .guru-body .admin-header-actions{max-width:none;gap:10px;flex-wrap:wrap}
+    .guru-body .admin-header .academic-clock{width:auto;max-width:200px;font-size:11px;order:0;flex-basis:auto}
+    .guru-body .admin-account-name{display:none}
+    .guru-body .content{padding:24px}
+    .teacher-bottom-nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:#fff;border-top:1px solid var(--line);padding:6px max(6px,env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));z-index:20}
+    .teacher-bottom-nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:52px;font-size:11px;color:#60757c;border-radius:8px;font-weight:600}
+    .teacher-bottom-nav .icon{width:20px;height:20px;flex-basis:20px}
+    .teacher-bottom-nav a[aria-current=page]{background:#e9f3f4;color:#285c66}
+    .teacher-bottom-nav a:focus-visible{outline:3px solid #326c77;outline-offset:-3px}
+}
+@media(max-width:600px){
+    .guru-body .admin-header{padding:10px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto;min-height:0}
+    .guru-body .portal-school{grid-column:1;grid-row:1}.guru-body .portal-school strong{font-size:13px}.guru-body .portal-school small{font-size:10px}
+    .guru-body .admin-header-actions{display:contents}.guru-body .admin-header-actions .admin-account{display:none}
+    .guru-body .admin-header-actions form{grid-column:2;grid-row:1}.guru-body .admin-header .academic-clock{grid-row:2;grid-column:1/-1;max-width:none;text-align:left;width:auto;font-size:11px}
+    .guru-body .content{padding:20px 16px}.guru-body .page-title{font-size:23px}.guru-body .page-subtitle{font-size:13px}
+    .guru-body .teacher-metrics{grid-template-columns:1fr;gap:12px}.guru-body .teacher-metrics .portal-metric{padding:18px}
+    .guru-body .teacher-shortcuts{padding:20px}.teacher-week{grid-template-columns:1fr}
+    .guru-body .stats{grid-template-columns:1fr;gap:12px}.guru-body .stats .stat-card{min-height:0;padding:18px;border-radius:10px}
+    .guru-body .profile-photo-editor{padding:14px;max-width:100%}.guru-body .profile-photo-editor input{max-width:100%;min-width:0}
+    .guru-body .teacher-mobile-table table,.guru-body .teacher-mobile-table tbody{display:block;width:100%;white-space:normal;background:transparent;border:0;overflow:visible}
+    .guru-body .teacher-mobile-table thead{display:block;position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+    .guru-body .teacher-mobile-table tr{display:block;background:#fff;border:1px solid var(--line);border-radius:10px;margin-bottom:12px;padding:10px 16px}
+    .guru-body .teacher-mobile-table td{display:grid;grid-template-columns:90px minmax(0,1fr);gap:10px;padding:10px 0;font-size:14px;overflow-wrap:anywhere}
+    .guru-body .teacher-mobile-table td[data-label]::before{content:attr(data-label);color:var(--muted);font-size:12px}
+    .guru-body .teacher-mobile-table td[colspan]{display:block}
+}
+@media print{.teacher-bottom-nav{display:none}.teacher-week{grid-template-columns:1fr 1fr}.teacher-day{break-inside:avoid}}

@@ -1,1 +1,1 @@
-<footer class="footer">SMK Islam Cipasung - Yayasan Bpk. KH. H. Acep Adang Ruhiyat</footer>
+<footer class="footer">SMK Islam Cipasung - Hargai waktu, hadir tepat waktu, berkarya sepenuh hati.</footer>

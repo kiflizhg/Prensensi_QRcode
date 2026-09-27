@@ -3,7 +3,7 @@
 @section('content')
 <section class="page-hero compact">
     <div>
-        <span class="page-kicker">Broadcast Message</span>
+        <span class="page-kicker">Informasi Sekolah</span>
         <h2 class="page-title">Arahan Kepala Sekolah</h2>
         <p class="page-subtitle">Kirim instruksi atau pengumuman resmi kepada admin, guru, atau seluruh pengguna operasional.</p>
     </div>

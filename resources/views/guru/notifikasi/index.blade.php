@@ -1,10 +1,11 @@
 @extends('layouts.guru')
+@section('title', 'Arahan Kepala Sekolah')
 
 @section('content')
 <section class="page-hero compact">
     <div>
-        <span class="page-kicker">Principal Updates</span>
-        <h2 class="page-title">Arahan Kepala Sekolah</h2>
+        <span class="page-kicker">Komunikasi Sekolah</span>
+        <h1 class="page-title">Arahan Kepala Sekolah</h1>
         <p class="page-subtitle">Ikuti pesan dan pengumuman resmi yang dikirim kepala sekolah kepada guru.</p>
     </div>
 </section>

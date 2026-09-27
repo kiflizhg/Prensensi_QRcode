@@ -47,8 +47,19 @@ class ProfileController extends Controller
         ];
 
         if ($user->guru) {
-            $rules['no_hp'] = ['nullable', 'string', 'max:255'];
+            $rules['no_hp'] = ['nullable', 'string', 'max:30'];
             $rules['alamat'] = ['nullable', 'string'];
+        }
+
+        if ($user->isKepalaSekolah()) {
+            $rules['username'] = ['required', 'string', 'max:100', 'alpha_dash', Rule::unique('users')->ignore($user->id)];
+        }
+
+        if ($user->isGuru()) {
+            $rules['username'] = ['required', 'string', 'max:100', 'alpha_dash', Rule::unique('users')->ignore($user->id)];
+            $rules['password'] = ['prohibited'];
+            $rules['password_confirmation'] = ['prohibited'];
+            $rules['current_password'] = ['prohibited'];
         }
 
         $validated = $request->validate($rules);
@@ -73,6 +84,7 @@ class ProfileController extends Controller
             $user->save();
 
             if ($user->guru) {
+                $user->guru->nama = $validated['name'];
                 if (array_key_exists('no_hp', $validated)) {
                     $user->guru->no_hp = $validated['no_hp'];
                 }
@@ -88,6 +100,8 @@ class ProfileController extends Controller
 
     public function updatePassword(Request $request)
     {
+        abort_if($request->user()->isGuru(), 403, 'Kata sandi guru hanya dapat diubah oleh admin sekolah.');
+
         $validated = $request->validate([
             'current_password' => ['required', 'current_password'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
@@ -97,6 +111,6 @@ class ProfileController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        return back()->with('success', 'Password berhasil diperbarui.');
+        return back()->with('success', 'Kata sandi berhasil diperbarui.');
     }
 }

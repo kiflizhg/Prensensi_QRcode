@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 
 class LoginController extends Controller
 {
@@ -17,8 +18,14 @@ class LoginController extends Controller
 
     public function store(Request $request)
     {
+        $attemptKey = 'login-failures:'.hash('sha256', (string) $request->ip());
+        $lockKey = $attemptKey.':locked';
+        if (RateLimiter::tooManyAttempts($lockKey, 1)) {
+            return $this->lockedResponse($lockKey);
+        }
+
         $data = $request->validate([
-            'login' => ['required', 'string'],
+            'login' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
         ]);
 
@@ -31,8 +38,18 @@ class LoginController extends Controller
         ];
 
         if (! Auth::validate($credentials)) {
-            return back()->withErrors(['login' => 'Username/email atau password tidak sesuai.'])->onlyInput('login');
+            $attempts = RateLimiter::hit($attemptKey, 7200);
+            if ($attempts >= 3) {
+                RateLimiter::hit($lockKey, 7200);
+                RateLimiter::clear($attemptKey);
+
+                return $this->lockedResponse($lockKey);
+            }
+
+            return back()->withErrors(['login' => 'Mohon maaf, username/email atau password Anda salah. Mohon ingat kembali atau hubungi admin. Sisa percobaan: '.(3 - $attempts).'. Setelah 3 kali salah, login dikunci selama 2 jam.'])->onlyInput('login');
         }
+
+        RateLimiter::clear($attemptKey);
 
         $user = User::where($field, $data['login'])
             ->where('is_active', true)
@@ -72,6 +89,13 @@ class LoginController extends Controller
     private function mustUseSingleSession(User $user): bool
     {
         return in_array($user->role, ['admin', 'kepala_sekolah'], true);
+    }
+
+    private function lockedResponse(string $lockKey)
+    {
+        $minutes = max(1, (int) ceil(RateLimiter::availableIn($lockKey) / 60));
+
+        return back()->withErrors(['login' => 'Mohon maaf, username/email atau password telah salah 3 kali. Login dikunci selama 2 jam. Silakan coba lagi dalam '.$minutes.' menit atau hubungi admin sekolah.'])->onlyInput('login');
     }
 
     private function hasActiveSession(User $user): bool

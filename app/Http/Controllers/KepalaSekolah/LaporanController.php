@@ -13,6 +13,7 @@ class LaporanController extends Controller
 {
     public function index(Request $request, LaporanService $laporanService)
     {
+        $request->validate(['bulan' => ['nullable', 'date_format:Y-m']]);
         return view('kepsek.laporan.index', [
             'presensis' => $laporanService->rekapBulanan($request->query('bulan')),
             'laporanMasuk' => $request->user()
@@ -25,6 +26,7 @@ class LaporanController extends Controller
 
     public function download(Request $request, LaporanService $laporanService)
     {
+        $request->validate(['bulan' => ['nullable', 'date_format:Y-m']]);
         $bulan = $request->query('bulan', now()->format('Y-m'));
         $tanggal = Carbon::parse($bulan.'-01');
         $presensis = $laporanService->rekapBulanan($bulan);

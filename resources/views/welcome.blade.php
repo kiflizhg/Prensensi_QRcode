@@ -1,130 +1,60 @@
 <!doctype html>
 <html lang="id">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name', 'SMK Islam Cipasung Presensi') }}</title>
-    @vite(['resources/css/app.css'])
-    <link rel="stylesheet" href="{{ asset('assets/css/app.css') }}">
+    @include('components.seo', ['title' => 'Beranda — SMK Islam Cipasung', 'description' => $page->description])
+    <link rel="stylesheet" href="{{ asset('assets/css/public.css') }}?v={{ filemtime(public_path('assets/css/public.css')) }}">
 </head>
-<body class="welcome-body">
-    <header class="welcome-nav">
-        <a class="brand" href="/">
-            <img class="brand-logo" src="{{ asset('assets/images/logo.jpeg') }}" alt="Logo SMK Islam Cipasung">
-            <span>
-                <strong>SMK Islam Cipasung</strong>
-                <small>Yayasan Bpk. KH. H. Acep Adang Ruhiyat</small>
-            </span>
-        </a>
-        <nav>
-            <a href="#terminal">Terminal Scan</a>
-            <a href="#alur">Workflow</a>
-            <a href="#akses">Hak Akses</a>
-            <a class="nav-login" href="{{ route('login') }}">Masuk</a>
-        </nav>
-    </header>
+<body class="public-body">
+<a class="public-skip" href="#utama">Lewati ke isi halaman</a>
+<header class="public-header"><a class="public-brand" href="{{ route('home') }}"><img src="{{ asset('assets/images/logo.jpeg') }}" alt="" width="44" height="44"><span>SMK Islam Cipasung<small>Portal informasi & presensi guru</small></span></a><nav aria-label="Navigasi utama"><a href="#sekolah">Visi & Misi</a><a href="#panduan">Panduan</a><a href="#kepala-sekolah">Kepala Sekolah</a><a class="public-button" href="{{ auth()->check() ? route('dashboard') : route('login') }}">{{ auth()->check() ? 'Dashboard' : 'Masuk' }}</a></nav></header>
+<main id="utama">
+<section id="kepala-sekolah" class="public-hero public-welcome">
+    <figure class="public-welcome-figure"><div class="public-welcome-photo">
+        @if($page->principal_photo_path)
+            <img src="{{ asset('storage/'.$page->principal_photo_path) }}" alt="Foto {{ $page->principal_name ?: 'Kepala Sekolah' }}" fetchpriority="high">
+        @else
+            <div class="public-photo-placeholder"><img src="{{ asset('assets/images/logo.jpeg') }}" alt="Logo sekolah" width="96" height="96"><span>Foto kepala sekolah belum ditambahkan.</span></div>
+        @endif
+    </div>
+    @if($page->principal_caption)<figcaption>{{ $page->principal_caption }}</figcaption>@endif
+    </figure>
+    <div class="public-hero-copy">
+        <span class="public-eyebrow">SAMBUTAN KEPALA SEKOLAH</span>
+        <h1>Selamat Datang di SMK Islam Cipasung</h1>
+        @if($page->principal_bio)
+            <p class="public-preserve">{{ $page->principal_bio }}</p>
+        @endif
+        <p class="public-signature"><strong>{{ $page->principal_name ?: 'Kepala Sekolah' }}</strong><span>Kepala SMK Islam Cipasung</span></p>
+        <blockquote>“{{ $page->quote }}”</blockquote>
+    </div>
 
-    <main class="welcome-main">
-        <section class="landing-hero" id="tujuan">
-            <div class="landing-copy">
-                <span class="eyebrow">Smart Attendance Platform</span>
-                <h1>Presensi Guru yang Cepat, Akurat, dan Terkelola.</h1>
-                <p class="lead">Platform internal SMK Islam Cipasung untuk mencatat kehadiran berbasis QR, memproses pengajuan, dan menyajikan laporan siap tindak lanjut bagi pimpinan sekolah.</p>
+</section>
 
-                <div class="hero-actions">
-                    <a class="btn" href="#terminal">@include('components.icon', ['name' => 'scan']) Buka Terminal</a>
-                    <a class="btn ghost" href="#alur">@include('components.icon', ['name' => 'report']) Lihat Workflow</a>
-                </div>
+<section id="sekolah" class="public-section"><div class="public-section-heading"><span class="public-eyebrow">ARAH PENDIDIKAN</span><h2>Visi & Misi Sekolah</h2><p>Tujuan bersama yang menjadi dasar setiap langkah.</p></div><div class="public-two-columns"><article class="public-panel"><span class="public-number">01</span><h3>Visi</h3><p class="public-preserve">{{ $page->vision ?: 'Visi resmi sekolah akan ditampilkan setelah diperbarui oleh admin.' }}</p></article><article class="public-panel"><span class="public-number">02</span><h3>Misi</h3>@if($page->mission)<ul class="public-lines">@foreach(preg_split('/\r\n|\r|\n/', $page->mission, -1, PREG_SPLIT_NO_EMPTY) as $line)<li>{{ $line }}</li>@endforeach</ul>@else<p>Misi resmi sekolah akan ditampilkan setelah diperbarui oleh admin.</p>@endif</article></div></section>
 
-                <div class="purpose-list" aria-label="Tujuan sistem">
-                    <div><strong>QR Attendance</strong><span>Pencatatan masuk dan pulang berlangsung real-time melalui kartu guru.</span></div>
-                    <div>
-                        <strong>Approval Flow</strong>
-                        <span>Izin, sakit, cuti, dan dinas luar diproses dalam alur persetujuan yang jelas.</span>
-                    </div>
-                    <div>
-                        <strong>Executive Report</strong>
-                        <span>Rekap presensi dapat dikirim admin dan dibaca kepala sekolah secara ringkas.</span>
-                    </div>
-                </div>
-            </div>
+<section class="public-section public-about"><span class="public-eyebrow">PORTAL PRESENSI GURU</span><h2>{{ $page->title }}</h2><p class="public-preserve">{{ $page->description }}</p>@if($page->content_photo_path)
+<figure class="public-content-figure"><img src="{{ asset('storage/'.$page->content_photo_path) }}" alt="{{ $page->content_caption ?: $page->title }}" loading="lazy">@if($page->content_caption)<figcaption>{{ $page->content_caption }}</figcaption>@endif</figure>
+@endif</section>
+<section id="panduan" class="public-section public-guide">
+    <div class="public-section-heading"><span class="public-eyebrow">PANDUAN PENGGUNAAN</span><h2>Presensi tertib.<br>Langkah yang mudah.</h2><p>Ikuti alur berikut untuk menggunakan layanan presensi guru.</p>
+    <figure class="public-guide-art"><img src="{{ $page->guide_photo_path ? asset('storage/'.$page->guide_photo_path) : asset('assets/images/guide-attendance-3d.png') }}" alt="{{ $page->guide_caption ?: 'Ilustrasi akun guru, jadwal, pemindaian kartu QR, dan laporan kehadiran' }}" loading="lazy">@if($page->guide_caption)<figcaption>{{ $page->guide_caption }}</figcaption>@endif</figure>
+    <a class="public-button" href="{{ auth()->check() ? route('dashboard') : route('login') }}">Mulai Menggunakan Portal</a></div>
+    <ol class="public-steps">@foreach(preg_split('/\r\n|\r|\n/', $page->guide, -1, PREG_SPLIT_NO_EMPTY) as $step)<li><span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><p>{{ $step }}</p></li>@endforeach</ol>
+</section>
 
-            <aside class="terminal-panel" id="terminal">
-                <form class="terminal-manual scanner-terminal" method="post" action="{{ route('terminal.scan.store') }}" data-scanner-terminal data-endpoint="{{ route('terminal.scan.store') }}" data-status-id="scan-status" data-mode-name="jenis_scan">
-                    @csrf
-                    <div class="scanner-head">
-                        @include('components.icon', ['name' => 'scan'])
-                        <div>
-                            <strong>Terminal Scanner QR</strong>
-                            <span>Acanlogic USB HID Keyboard Mode</span>
-                        </div>
-                    </div>
-                    <div class="scan-mode compact" aria-label="Pilih jenis presensi">
-                        <label><input type="radio" name="jenis_scan" value="masuk" checked><span>Scan Masuk</span></label>
-                        <label><input type="radio" name="jenis_scan" value="pulang"><span>Scan Pulang</span></label>
-                    </div>
-                    <label for="scanner">Input Scanner</label>
-                    <input type="text" id="scanner" name="qr_code" autocomplete="off" autofocus data-scanner-input placeholder="Scan kartu QR guru">
-                    <div id="scan-status" class="scan-status">Scanner siap. Scan kartu QR guru.</div>
-                    <button class="btn" type="submit">@include('components.icon', ['name' => 'check']) Simpan Manual</button>
-                </form>
-            </aside>
-        </section>
-
-        <section class="workflow-section clear-flow" id="alur">
-            <article class="workflow-card">
-                <span>01</span>
-                <strong>Profil Guru Tersentral</strong>
-                <p>Admin mengelola data guru, akun akses, dan kartu QR dalam satu modul operasional.</p>
-            </article>
-            <article class="workflow-card">
-                <span>02</span>
-                <strong>Scan Masuk dan Pulang</strong>
-                <p>Terminal membaca kartu guru, memvalidasi status pengajuan, lalu menyimpan presensi harian.</p>
-            </article>
-            <article class="workflow-card">
-                <span>03</span>
-                <strong>Monitoring Pimpinan</strong>
-                <p>Kepala sekolah memantau presensi, memutuskan pengajuan, dan mengirim arahan resmi.</p>
-            </article>
-        </section>
-
-        <section class="role-dashboard" id="akses">
-            <div class="overview-head">
-                <span class="eyebrow">Role-Based Experience</span>
-                <h2>Setiap pengguna mendapat ruang kerja sesuai tanggung jawabnya.</h2>
-            </div>
-
-            <div class="role-map">
-                <article>
-                    <header><span>Admin</span><strong>Operasional Sekolah</strong></header>
-                    <ul>
-                        <li>Manajemen guru dan akun</li>
-                        <li>Penerbitan kartu QR</li>
-                        <li>Terminal presensi sekolah</li>
-                        <li>Distribusi laporan ke kepsek</li>
-                    </ul>
-                </article>
-                <article>
-                    <header><span>Guru</span><strong>Self-Service Presensi</strong></header>
-                    <ul>
-                        <li>Melihat status presensi</li>
-                        <li>Mengirim pengajuan resmi</li>
-                        <li>Membaca arahan kepsek</li>
-                    </ul>
-                </article>
-                <article>
-                    <header><span>Kepala Sekolah</span><strong>Kontrol dan Keputusan</strong></header>
-                    <ul>
-                        <li>Monitoring presensi harian</li>
-                        <li>Persetujuan pengajuan</li>
-                        <li>Broadcast arahan ke admin/guru</li>
-                    </ul>
-                </article>
-            </div>
-        </section>
-    </main>
-    <script src="{{ asset('assets/js/qr-terminal.js') }}"></script>
+<section class="public-closing"><span class="public-eyebrow">SETIAP MENIT BERARTI</span><h2>“{{ $page->quote }}”</h2><a class="public-button" href="{{ auth()->check() ? route('dashboard') : route('login') }}">Buka Portal Presensi ↗</a></section>
+</main><footer class="public-footer" id="kontak">
+    <div><strong>SMK Islam Cipasung</strong><p>Waktu tertata, langkah bermakna.</p><small>© {{ date('Y') }} SMK Islam Cipasung</small></div>
+    <div><span class="public-footer-label">Temukan Kami</span><nav class="public-footer-social" aria-label="Media sosial dan website sekolah">
+    @foreach(['whatsapp' => ['whatsapp_url', 'WhatsApp'], 'instagram' => ['instagram_url', 'Instagram'], 'website' => ['website_url', 'Website Sekolah']] as $icon => [$field, $label])
+        @if($page->$field)
+        <a class="public-social-icon public-social-{{ $icon }}" href="{{ $page->$field }}" target="_blank" rel="noopener noreferrer" aria-label="Buka {{ $label }} sekolah (tab baru)" title="{{ $label }}">@include('components.social-icon', ['name' => $icon])<span>{{ $label }}</span></a>
+        @else
+        <span class="public-social-icon public-social-disabled" title="{{ $label }}: Tautan belum tersedia">@include('components.social-icon', ['name' => $icon])<span>{{ $label }}</span><span class="public-sr-only">Tautan belum tersedia</span></span>
+        @endif
+    @endforeach
+    </nav></div>
+    <a href="#utama">Kembali ke atas ↑</a>
+</footer>
 </body>
 </html>

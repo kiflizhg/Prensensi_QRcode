@@ -19,6 +19,8 @@ class AdminMiddleware
             abort(403, 'Halaman ini hanya untuk admin.');
         }
 
+        app()->setLocale('id');
+
         return $next($request);
     }
 }
